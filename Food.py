@@ -7,7 +7,7 @@ import simpy
 
 
 class Food(Sprite):
-    def __init__(self, env, my_map, position=Point(0, 0), expiration=15):
+    def __init__(self, env, my_map, position=Point(0, 0), expiration=50):
         super().__init__(env, my_map, position)
         self.filling = 100  # The amount of hunger this food restores
         self.expiration = expiration
@@ -19,4 +19,4 @@ class Food(Sprite):
             self.print('Expired')
         except simpy.Interrupt:
             self.print('Eaten')
-            self.map.delete_sprite(self)
+        self.map.delete_sprite(self)

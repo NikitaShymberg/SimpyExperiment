@@ -47,13 +47,13 @@ def shortest_path(start: Point, finish: Point) -> Point:
     Returns the next point to go to.
     """
     if start.x < finish.x:
-        return Point(start.x + 1, start.y)
+        return Point(start.x + 1, start.y, start.map)
     elif start.x > finish.x:
-        return Point(start.x - 1, start.y)
+        return Point(start.x - 1, start.y, start.map)
     elif start.y < finish.y:
-        return Point(start.x, start.y + 1)
+        return Point(start.x, start.y + 1, start.map)
     elif start.y > finish.y:
-        return Point(start.x, start.y - 1)
+        return Point(start.x, start.y - 1, start.map)
     else:
         print('Warning: start and end points are the same!')
         return start

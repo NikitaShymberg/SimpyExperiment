@@ -14,7 +14,7 @@ class Sprite:
         self.print('Spawned', type(self).__name__)
 
     def print(self, *args) -> None:
-        string = f'[{self.env.now} | {self.id} | {self.position}]'
+        string = f'[{int(self.env.now)} | {self.id} | {self.position}]'  # TODO: not sure if the int here is correct
         print(string, *args)
 
     def __eq__(self, other):

@@ -5,6 +5,7 @@ from utils import Point, shortest_path, distance_between
 from Sprite import Sprite
 from Food import Food
 import numpy as np
+import random
 # TODO: something something pdb?
 
 
@@ -14,8 +15,9 @@ class Peon(Sprite):
         self.stats = {
             'mitosis_progress': 0,
             'mitosis_efficiency': 0.5,
-            'mitosis_threshold': 300,
+            'mitosis_threshold': 150,
             'speed': 1,
+            'max_child_difference': 0.25,
         }
         self.hunger = 100  # TODO: decrement this at some rate maybe have a separate "process" for this actually
         self.destination = None
@@ -58,14 +60,35 @@ class Peon(Sprite):
 
     def mitose(self):
         """
-        Makes a slightly altered copy of the Peon
+        Makes a slightly altered copy of the Peon.
+        Spawns the child Peon on a random adjacent point.
+        If all adjacent points are full, the child is killed.
         """
-        ...  # TODO: implement
+        self.print('Mitosing')
+        child_stats = {}
+        for stat in self.stats:
+            child_stats[stat] = self.stats[stat] * (random.random() * self.stats['max_child_difference'] + 1)
+
+        available_spawns = self.position.get_adjacent()
+        if available_spawns is not None:
+            spawn = random.choice(available_spawns)
+        else:
+            spawn = None  # The child must die
+
+        child = Peon(self.env, self.map, spawn)
+        child.stats = child_stats
+
+        if child.position is None:  # No valid spawns for the child
+            child.die()
+
+    def die(self):
+        self.print('Died')
+        self.map.delete_sprite(self)
 
     def eat(self):
         my_food = self.find_food()
         self.hunger += my_food.filling
-        self.stats['mitosis_threshold'] += my_food.filling * self.stats['mitosis_efficiency']
+        self.stats['mitosis_progress'] += my_food.filling * self.stats['mitosis_efficiency']
         if self.stats['mitosis_progress'] >= self.stats['mitosis_threshold']:
             self.mitose()
         self.destination = None
