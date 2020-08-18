@@ -1,9 +1,13 @@
 """
 Useful funcitons/classes for the whole program
 """
+import enum
 
 
 class Point:
+    """
+    TODO: move me to my own file
+    """
     def __init__(self, x, y, my_map=None):
         self.x = x
         self.y = y
@@ -64,3 +68,14 @@ def distance_between(p1: Point, p2: Point):
     Returns the distance between two given points
     """
     return abs(p1.x - p2.x) + abs(p1.y - p2.y)
+
+
+class Actions(enum.Enum):
+    Spawned = 0
+    Walked = 1
+    Ate = 2
+    Eaten = 3
+    Mitosed = 4
+    Died = 5
+    Expired = 6
+    NoAction = -1

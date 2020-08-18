@@ -1,7 +1,7 @@
 """
 A basic "worker"
 """
-from utils import Point, shortest_path, distance_between
+from utils import Point, shortest_path, distance_between, Actions
 from Sprite import Sprite
 from Food import Food
 import numpy as np
@@ -53,9 +53,9 @@ class Peon(Sprite):
         if self.destination is not None:
             next_point = shortest_path(self.position, self.destination)
             self.map.move(self, next_point)
-            self.print('Walked')
+            self.print(Actions.Walked.name)
         else:
-            self.print('No destination, stood still')
+            self.print(Actions.NoAction.name)
         return self.env.timeout(self.stats['speed'])  # FIXME: this is backwards, at the moment the higher your speed, the longer you wait to walk
 
     def mitose(self):
@@ -64,7 +64,6 @@ class Peon(Sprite):
         Spawns the child Peon on a random adjacent point.
         If all adjacent points are full, the child is killed.
         """
-        self.print('Mitosing')
         child_stats = {}
         for stat in self.stats:
             child_stats[stat] = self.stats[stat] * (random.random() * self.stats['max_child_difference'] + 1)
@@ -75,6 +74,7 @@ class Peon(Sprite):
         else:
             spawn = None  # The child must die
 
+        self.print(Actions.Mitosed.name)
         child = Peon(self.env, self.map, spawn)
         child.stats = child_stats
 
@@ -82,17 +82,17 @@ class Peon(Sprite):
             child.die()
 
     def die(self):
-        self.print('Died')
+        self.print(Actions.Died.name)
         self.map.delete_sprite(self)
 
     def eat(self):
         my_food = self.find_food()
         self.hunger += my_food.filling
+        self.print(Actions.Ate.name)
         self.stats['mitosis_progress'] += my_food.filling * self.stats['mitosis_efficiency']
         if self.stats['mitosis_progress'] >= self.stats['mitosis_threshold']:
             self.mitose()
         self.destination = None
-        self.print('Ate')
         my_food.existance.interrupt()
         return self.env.timeout(self.stats['speed'])  # FIXME: this is backwards, at the moment the higher your speed, the longer you wait to walk
 

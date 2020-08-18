@@ -1,7 +1,7 @@
 """
 This represents the super class of all the things that can be on the map.
 """
-from utils import Point
+from utils import Point, Actions
 import uuid
 
 
@@ -11,7 +11,7 @@ class Sprite:
         self.map = my_map
         self.position = position
         self.id = uuid.uuid4()
-        self.print('Spawned', type(self).__name__)
+        self.print(Actions.Spawned.name, type(self).__name__)
 
     def print(self, *args) -> None:
         string = f'[{int(self.env.now)} | {self.id} | {self.position}]'  # TODO: not sure if the int here is correct
