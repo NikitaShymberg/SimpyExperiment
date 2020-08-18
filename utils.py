@@ -1,54 +1,14 @@
 """
-Useful funcitons/classes for the whole program
+Useful classes/funcitons for the whole program.
+A.k.a I didn't know where to put something, so I put it here.
 """
 import enum
+from Point import Point
 
 
-class Point:
+def shortest_path(start, finish):
     """
-    TODO: move me to my own file
-    """
-    def __init__(self, x, y, my_map=None):
-        self.x = x
-        self.y = y
-        self.map = my_map
-
-    def get_adjacent(self):
-        """
-        Returns the adjacent points to this point
-        """
-        if self.map is None:
-            # TODO: handle this
-            print('ERROR: point not attached to a map')
-            return None
-
-        adjacent = []
-        max_w = self.map.width
-        max_h = self.map.height
-        if self.x != 0:
-            adjacent.append(Point(self.x - 1, self.y, self.map))
-        if self.x != max_w - 1:
-            adjacent.append(Point(self.x + 1, self.y, self.map))
-        if self.y != 0:
-            adjacent.append(Point(self.x, self.y - 1, self.map))
-        if self.y != max_h - 1:
-            adjacent.append(Point(self.x, self.y + 1, self.map))
-
-        return adjacent
-
-    def as_tuple(self):
-        return (self.x, self.y)
-
-    def __repr__(self):
-        return f"({self.x:3}, {self.y:3})"
-
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y
-
-
-def shortest_path(start: Point, finish: Point) -> Point:
-    """
-    Returns the next point to go to.
+    Returns the next point to go to to reach `finish` from `start`.
     """
     if start.x < finish.x:
         return Point(start.x + 1, start.y, start.map)
@@ -63,7 +23,7 @@ def shortest_path(start: Point, finish: Point) -> Point:
         return start
 
 
-def distance_between(p1: Point, p2: Point):
+def distance_between(p1, p2):
     """
     Returns the distance between two given points
     """
@@ -71,6 +31,9 @@ def distance_between(p1: Point, p2: Point):
 
 
 class Actions(enum.Enum):
+    """
+    All the available actions that can be taken by Sprites.
+    """
     Spawned = 0
     Walked = 1
     Ate = 2

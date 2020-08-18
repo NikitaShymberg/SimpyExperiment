@@ -5,19 +5,23 @@ from utils import Point, Actions
 
 
 class Event():
+    """
+    A class that represents a single line in the log.
+    This is an event at a single timestamp, for a single sprite, at a single place.
+    """
     def __init__(self, log_string):
         """
         Black magic string parsing method to create an Event from a log entry.
         """
         match_string = r'\[([0-9]+) \| ([a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}) \| \((\s*[0-9]+,\s*[0-9]+)\)\] ([\S\s]*)'
         groups = re.search(match_string, log_string).groups()
-        self.time = int(groups[0])
-        self.id = groups[1]
+        self.time = int(groups[0])  # Event timestamp
+        self.id = groups[1]  # ID of the sprite that the event affects
         x, y = int(groups[2].split()[0][:-1]), int(groups[2].split()[1])
-        self.point = Point(x, y)
+        self.point = Point(x, y)  # The location of the event
         for action in Actions:
             if groups[3].strip() == action.name:
-                self.action = action
+                self.action = action  # The type of event
                 break
         else:
             # Spawn because it is followed by what spawned
@@ -29,6 +33,10 @@ class Event():
 
 
 class Display():
+    """
+    This is the class that visualises the simulation.
+    Collects and processes all events. At every timestep displays the current map setup.
+    """
     def __init__(self, width, height, fps=100):
         self.width = width
         self.height = height
@@ -42,17 +50,24 @@ class Display():
             'Background': (0, 0, 0)
         }
 
-    def read_log(self, path: str):
+    def read_log(self, path):
+        """
+        A generator that reads the log at `path` and yields one row at a time.
+        """
         for row in open(path):
             yield row
 
     def show(self):
+        """
+        Displays the current `self.img` state at the framerate specified by `self.fps`.
+        """
         cv2.imshow('Simpy', self.img)
         cv2.waitKey(1000 // self.fps)
 
-    def run(self, path: str):
+    def simulate(self, path):
         """
-        "main" function to run
+        This is the "main" function to run.
+        Iterates over the log at `path` and displays the simulation.
         """
         prev_time = 0
         for entry in self.read_log(path):
@@ -81,13 +96,17 @@ class Display():
 
     def process_died_event(self, event):
         """
-        Processes a "died" or "expired" or "eaten" event.
+        Processes a "died", "expired" or "eaten" event.
         """
         old_point = self.sprites[event.id][0]
         self.img[old_point.y, old_point.x] = self.sprite_colors["Background"]
         del self.sprites[event.id]
 
     def process_event(self, event):
+        """
+        Processes a given event by calling one of the helper functions.
+        This updates the state of `self` to reflect the changes of the current `event`.
+        """
         options = {
             Actions.Spawned: self.process_spawned_event,
             Actions.Walked: self.process_walked_event,
@@ -105,5 +124,4 @@ class Display():
 
 
 d = Display(600, 400)
-d.run('log.log')
-# d.run('testlog.log')
+d.simulate('log.log')
