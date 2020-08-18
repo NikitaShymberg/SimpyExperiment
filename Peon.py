@@ -19,14 +19,13 @@ class Peon(Sprite):
             'speed': 1,
             'max_child_difference': 0.25,
         }
-        self.hunger = 100  # TODO: decrement this at some rate maybe have a separate "process" for this actually
+        self.hunger = 200  # TODO: decrement this at some rate maybe have a separate "process" for this actually
         self.destination = None
         self.action = self.env.process(self.run())
 
     def find_food(self):
         """
         Returns the nearest food or None if none found.
-        TODO: test?
         """
         if self.map.foods == []:
             return None
@@ -37,6 +36,8 @@ class Peon(Sprite):
         return self.map.foods[np.argmin(distances)]
 
     def determine_action(self):
+        if self.hunger <= 0:
+            return self.die
         if self.destination is None or self.position != self.destination:
             food = self.find_food()
             if food is not None:
@@ -84,6 +85,7 @@ class Peon(Sprite):
     def die(self):
         self.print(Actions.Died.name)
         self.map.delete_sprite(self)
+        return self.env.timeout(0)
 
     def eat(self):
         my_food = self.find_food()
@@ -99,5 +101,8 @@ class Peon(Sprite):
     def run(self):
         # TODO: rename this probably
         while True:
+            self.hunger -= 1  # TODO: decrement in separate process
             action = self.determine_action()
             yield action()
+            if action == self.die:
+                break

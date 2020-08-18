@@ -29,11 +29,12 @@ class Event():
 
 
 class Display():
-    def __init__(self, width, height):
+    def __init__(self, width, height, fps=100):
         self.width = width
         self.height = height
         self.current_time = 0
         self.img = np.zeros((height, width, 3))
+        self.fps = fps
         self.sprites = {}  # Keeps track of the sprite IDs, locations, and types
         self.sprite_colors = {
             'Peon': (255, 255, 255),
@@ -47,7 +48,7 @@ class Display():
 
     def show(self):
         cv2.imshow('Simpy', self.img)
-        cv2.waitKey(100)
+        cv2.waitKey(1000 // self.fps)
 
     def run(self, path: str):
         """
@@ -78,15 +79,9 @@ class Display():
         self.img[event.point.y, event.point.x] = self.sprite_colors[sprite]
         self.img[old_point.y, old_point.x] = self.sprite_colors["Background"]
 
-    def process_ate_event(self, event):
+    def process_died_event(self, event):
         """
-        Processes an "ate" event.
-        """
-        pass
-
-    def process_eaten_event(self, event):
-        """
-        Processes an "eaten" event.
+        Processes a "died" or "expired" or "eaten" event.
         """
         old_point = self.sprites[event.id][0]
         self.img[old_point.y, old_point.x] = self.sprite_colors["Background"]
@@ -96,11 +91,11 @@ class Display():
         options = {
             Actions.Spawned: self.process_spawned_event,
             Actions.Walked: self.process_walked_event,
-            Actions.Ate: self.process_ate_event,
-            Actions.Eaten: self.process_eaten_event,
+            Actions.Ate: None,
+            Actions.Eaten: self.process_died_event,
             Actions.Mitosed: None,
-            Actions.Died: None,
-            Actions.Expired: None,
+            Actions.Died: self.process_died_event,
+            Actions.Expired: self.process_died_event,
             Actions.NoAction: None,
         }
         if options[event.action] is not None:
