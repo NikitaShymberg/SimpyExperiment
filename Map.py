@@ -19,7 +19,7 @@ class Map:
         self.sprites = np.zeros((height, width), dtype=object)
         self.sprites[:, :] = None  # A grid that holds the sprites on the map
         self.foods = []  # A list of all the existing food sprites
-        self.food_spawn_period_max = 10  # The maximum amount of time to wait before spawning a new food
+        self.food_spawn_period_max = 5  # The maximum amount of time to wait before spawning a new food
         self.env.process(self.simulate())
 
     def add_sprite(self, sprite):

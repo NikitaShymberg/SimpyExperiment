@@ -37,7 +37,7 @@ class Display():
     This is the class that visualises the simulation.
     Collects and processes all events. At every timestep displays the current map setup.
     """
-    def __init__(self, width, height, fps=100):
+    def __init__(self, width, height, fps=1000):
         self.width = width
         self.height = height
         self.current_time = 0

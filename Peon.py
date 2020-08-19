@@ -17,15 +17,16 @@ class Peon(Sprite):
     def __init__(self, env, my_map, position=Point(0, 0)):
         super().__init__(env, my_map, position)
         self.stats = {
-            'mitosis_progress': 0,
-            'mitosis_efficiency': 0.5,
-            'mitosis_threshold': 150,
-            'speed': 1,
-            'max_child_difference': 0.25,
+            'mitosis_progress': 0,  # The current mitosis juice level
+            'mitosis_efficiency': 0.5,  # The efficiency with which filling is converted to mitosis juice
+            'mitosis_threshold': 500,  # The amount of mitosis juice required to mitose
+            'speed': 1,  # The number of tiles it moves per time
+            'max_child_difference': 0.05,  # The maximum percentage a child's stats may differ by
         }  # The characteristics of this Peon
-        self.hunger = 200  # The initial hunger value, if this reaches 0 the Peon dies # TODO: decrement this at some rate maybe have a separate "process" for this actually
+        self.hunger = 250  # The initial hunger value, if this reaches 0 the Peon dies
         self.destination = None  # The current place that the Peon walks to
-        self.action = self.env.process(self.simulate())
+        self.is_alive = True
+        self.action = [self.env.process(self.simulate_events()), self.env.process(self.simulate_hunger())]
 
     def find_food(self):
         """
@@ -62,13 +63,20 @@ class Peon(Sprite):
         """
         Moves towards `self.destination` at the rate specified by `self.stats['speed']`
         """
-        if self.destination is not None:
-            next_point = shortest_path(self.position, self.destination)
-            self.map.move(self, next_point)
+        have_stepped = False
+        # Walk
+        for step in range(round(self.stats['speed'])):
+            if self.destination is not None:
+                next_point = shortest_path(self.position, self.destination)
+                self.map.move(self, next_point)
+                have_stepped = True
+
+        # Log things
+        if have_stepped:
             self.print(Actions.Walked.name)
         else:
             self.print(Actions.NoAction.name)
-        return self.env.timeout(self.stats['speed'])  # FIXME: this is backwards, at the moment the higher your speed, the longer you wait to walk
+        return self.env.timeout(1)
 
     def mitose(self):
         """
@@ -78,7 +86,9 @@ class Peon(Sprite):
         """
         child_stats = {}
         for stat in self.stats:
-            child_stats[stat] = self.stats[stat] * (random.random() * self.stats['max_child_difference'] + 1)
+            coin_flip = 1 if random.random() < 0.5 else - 1
+            percent_change = 1 + coin_flip * (random.random() * self.stats['max_child_difference'])  # TODO: how to make this normal? Maybe multiply
+            child_stats[stat] = self.stats[stat] * percent_change
 
         available_spawns = self.position.get_adjacent()
         if available_spawns is not None:
@@ -97,6 +107,7 @@ class Peon(Sprite):
         """
         Removes the Peon from the map.
         """
+        self.is_alive = False
         self.print(Actions.Died.name)
         self.map.delete_sprite(self)
         return self.env.timeout(0)
@@ -107,23 +118,30 @@ class Peon(Sprite):
         If enough food has been eaten, spawns a child Peon nearby.
         """
         my_food = self.find_food()
-        self.hunger += my_food.filling
-        self.print(Actions.Ate.name)
-        self.stats['mitosis_progress'] += my_food.filling * self.stats['mitosis_efficiency']
-        if self.stats['mitosis_progress'] >= self.stats['mitosis_threshold']:
-            self.mitose()
+        if my_food is not None:
+            self.hunger += my_food.filling
+            self.print(Actions.Ate.name)
+            self.stats['mitosis_progress'] += my_food.filling * self.stats['mitosis_efficiency']
+            if self.stats['mitosis_progress'] >= self.stats['mitosis_threshold']:
+                self.mitose()
+            my_food.existance.interrupt()
         self.destination = None
-        my_food.existance.interrupt()
-        return self.env.timeout(self.stats['speed'])  # FIXME: this is backwards, at the moment the higher your speed, the longer you wait to walk
+        return self.env.timeout(1)
 
-    def simulate(self):
+    def simulate_hunger(self):
+        """
+        A simulation method that decrements `self`'s hunger value.
+        BUG: Sometimes when a Peon starves to death it doesn't call self.die
+        """
+        while self.is_alive:
+            self.hunger -= 1
+            yield self.env.timeout(1)
+
+    def simulate_events(self):
         """
         The main simulation method.
         Chooses an action and does it.
         """
-        while True:
-            self.hunger -= 1  # TODO: decrement in separate process
+        while self.is_alive:
             action = self.determine_action()
             yield action()
-            if action == self.die:
-                break

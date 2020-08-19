@@ -19,7 +19,7 @@ def shortest_path(start, finish):
     elif start.y > finish.y:
         return Point(start.x, start.y - 1, start.map)
     else:
-        print('Warning: start and end points are the same!')
+        # print('Warning: start and end points are the same!')
         return start
 
 
