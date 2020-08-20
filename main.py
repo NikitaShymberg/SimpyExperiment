@@ -17,3 +17,4 @@ if __name__ == '__main__':
         peon = Peon(env, my_map, Point(x, y, my_map))
         my_map.add_sprite(peon)
     env.run(until=5000)
+    # TODO: print out some stats here or something

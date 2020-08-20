@@ -1,5 +1,5 @@
 """
-A basic "worker"
+A character that walks around and eats food
 """
 from Point import Point
 from utils import shortest_path, distance_between, Actions
@@ -87,7 +87,7 @@ class Peon(Sprite):
         child_stats = {}
         for stat in self.stats:
             coin_flip = 1 if random.random() < 0.5 else - 1
-            percent_change = 1 + coin_flip * (random.random() * self.stats['max_child_difference'])  # TODO: how to make this normal? Maybe multiply
+            percent_change = 1 + coin_flip * (random.random() * self.stats['max_child_difference'])
             child_stats[stat] = self.stats[stat] * percent_change
 
         available_spawns = self.position.get_adjacent()
