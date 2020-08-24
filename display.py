@@ -13,7 +13,7 @@ class Event():
         """
         Black magic string parsing method to create an Event from a log entry.
         """
-        match_string = r'\[([0-9]+) \| ([a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}) \| \((\s*[0-9]+,\s*[0-9]+)\)\] ([\S\s]*)'
+        match_string = r'\[([0-9]+) \| ([a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}) \| \((\s*[0-9]+,\s*[0-9]+)\)\] ([\S\s]*)'  # noqa: E501
         groups = re.search(match_string, log_string).groups()
         self.time = int(groups[0])  # Event timestamp
         self.id = groups[1]  # ID of the sprite that the event affects
@@ -36,12 +36,13 @@ class Display():
     """
     This is the class that visualises the simulation.
     Collects and processes all events. At every timestep displays the current map setup.
+    If `save` is true, saves the visualization as an avi.
     """
-    def __init__(self, width, height, fps=1000):
+    def __init__(self, width, height, fps=120, save=False):
         self.width = width
         self.height = height
         self.current_time = 0
-        self.img = np.zeros((height, width, 3))
+        self.img = np.zeros((height, width, 3), dtype=np.uint8)
         self.fps = fps
         self.sprites = {}  # Keeps track of the sprite IDs, locations, and types
         self.sprite_colors = {
@@ -49,6 +50,18 @@ class Display():
             'Food': (0, 0, 255),
             'Background': (0, 0, 0)
         }
+        if save:
+            fourcc = cv2.VideoWriter_fourcc(*'XVID')  # HFYU works for lossless, TODO figure out HEVC
+            self.video = cv2.VideoWriter('simulation.avi', fourcc, self.fps, (self.width, self.height))
+        else:
+            self.video = None
+
+    def __del__(self):
+        """
+        Clean up the video creation on exit.
+        """
+        if self.video:
+            self.video.release()
 
     def read_log(self, path):
         """
@@ -61,6 +74,8 @@ class Display():
         """
         Displays the current `self.img` state at the framerate specified by `self.fps`.
         """
+        if self.video:
+            self.video.write(self.img)
         cv2.imshow('Simpy', self.img)
         cv2.waitKey(1000 // self.fps)
 
@@ -123,5 +138,5 @@ class Display():
             options[event.action](event)
 
 
-d = Display(600, 400)
+d = Display(600, 400, save=True)
 d.simulate('log.log')
